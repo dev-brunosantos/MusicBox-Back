@@ -72,7 +72,9 @@ export const UsuarioScalarFieldEnum = {
   nome: 'nome',
   email: 'email',
   senha: 'senha',
-  cargo: 'cargo'
+  cargo: 'cargo',
+  dataCadastro: 'dataCadastro',
+  dataAtualizacao: 'dataAtualizacao'
 } as const
 
 export type UsuarioScalarFieldEnum = (typeof UsuarioScalarFieldEnum)[keyof typeof UsuarioScalarFieldEnum]

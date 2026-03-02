@@ -519,7 +519,9 @@ export const UsuarioScalarFieldEnum = {
   nome: 'nome',
   email: 'email',
   senha: 'senha',
-  cargo: 'cargo'
+  cargo: 'cargo',
+  dataCadastro: 'dataCadastro',
+  dataAtualizacao: 'dataAtualizacao'
 } as const
 
 export type UsuarioScalarFieldEnum = (typeof UsuarioScalarFieldEnum)[keyof typeof UsuarioScalarFieldEnum]
@@ -550,6 +552,13 @@ export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 
  * Reference to a field of type 'Cargo'
  */
 export type EnumCargoFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Cargo'>
+    
+
+
+/**
+ * Reference to a field of type 'DateTime'
+ */
+export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
     
 
 
