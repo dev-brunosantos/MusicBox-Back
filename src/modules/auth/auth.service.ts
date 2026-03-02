@@ -1,26 +1,36 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from "@nestjs/jwt";
+import { LoginAuthDto } from './dto/login-auth.dto';
+import { UsuarioService } from '../usuario/usuario.service';
+import { compare } from "bcrypt";
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
-  }
 
-  findAll() {
-    return `This action returns all auth`;
-  }
+  constructor(
+    private usuarioService: UsuarioService,
+    private jwt: JwtService
+  ) { }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
+  public async signIn(loginDto: LoginAuthDto) {
+    const user = await this.usuarioService.findByEmail(loginDto.email);
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
+    if (!user) {
+      throw new UnauthorizedException("Credenciais inválidas.");
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+    const password = await compare(loginDto.senha, user.senha)
+
+    if (!password) {
+      throw new UnauthorizedException("Não autorizado");
+    }
+
+    const payload = {
+      sub: user.id, nome: user.nome, cargo: user.cargo
+    }
+
+    return {
+      access_token: await this.jwt.signAsync(payload)
+    }
   }
 }
