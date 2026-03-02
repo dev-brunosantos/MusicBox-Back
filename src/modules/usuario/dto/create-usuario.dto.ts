@@ -1,5 +1,5 @@
 import { IsEnum, IsString, MinLength } from "class-validator";
-
+import { Cargo } from "src/generated/prisma/enums";
 
 export class CreateUsuarioDto {
     // id: string;
@@ -13,6 +13,6 @@ export class CreateUsuarioDto {
     @MinLength(6, { message: "A quantidade mínima de caracteres é igual a 6. Tente uma nova senha."})
     senha: string;
 
-    @IsEnum(['Aluno', 'Professor', 'Dev'], { message: "O cargo informado não é válido."})
-    cargo: 'Aluno' | 'Professor' | 'Dev'
+    @IsEnum(Cargo, { message: "O cargo informado não é válido."})
+    cargo: Cargo
 }

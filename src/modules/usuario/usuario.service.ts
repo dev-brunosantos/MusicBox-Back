@@ -10,28 +10,38 @@ export class UsuarioService {
   constructor(private prisma: DbService) { }
 
   public async create(createUsuarioDto: CreateUsuarioDto) {
+    try {
+      const emailExists = await this.findByEmail(createUsuarioDto.email);
 
-    const emailExists = await this.findByEmail(createUsuarioDto.email);
-
-    if (emailExists) {
-      throw new HttpException(
-        "O e-mail informado já está vinculado a um outro usuário do sistema.",
-        HttpStatus.CONFLICT
-      );
-    }
-
-    const newPassword = await hash(createUsuarioDto.senha, 10);
-
-    const newUser = await this.prisma.usuario.create({
-      data: {
-        nome: createUsuarioDto.nome,
-        email: createUsuarioDto.email,
-        senha: newPassword,
-        cargo: 'Aluno'
+      if (emailExists) {
+        throw new HttpException(
+          "O e-mail informado já está vinculado a um outro usuário do sistema.",
+          HttpStatus.CONFLICT
+        );
       }
-    })
 
-    return newUser;
+      const newPassword = await hash(createUsuarioDto.senha, 10);
+
+      const newUser = await this.prisma.usuario.create({
+        data: {
+          nome: createUsuarioDto.nome,
+          email: createUsuarioDto.email,
+          senha: newPassword,
+          cargo: createUsuarioDto.cargo
+        }
+      })
+
+      return newUser;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        "erro interno ao salvar o usuário no sistema.",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      )
+    }
   }
 
   public async findAll() {
@@ -41,7 +51,7 @@ export class UsuarioService {
         nome: true,
         email: true,
         cargo: true,
-        // Depois deve-se adicionar a data de cadastro
+        dataCadastro: true
       }
     })
 
@@ -53,64 +63,94 @@ export class UsuarioService {
   }
 
   public async findOne(id: string) {
-    return await this.prisma.usuario.findFirst({
+    return await this.prisma.usuario.findUnique({
       where: { id },
       select: {
         id: true,
         nome: true,
         email: true,
         cargo: true,
-        // Depois deve-se adicionar a data de cadastro
+        dataCadastro: true
       }
     })
   }
 
   public async findByEmail(email: string) {
     return await this.prisma.usuario.findUnique({
-      where: { email }
+      where: { email },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        senha: true,
+        cargo: true,
+        dataCadastro: true
+      }
     })
   }
 
   public async update(id: string, updateUsuarioDto: UpdateUsuarioDto) {
-    const userID = await this.prisma.usuario.findFirst({
-      where: { id }
-    })
+    try {
+      const userID = await this.prisma.usuario.findFirst({
+        where: { id }
+      })
 
-    if (!userID) {
-      throw new HttpException("O ID informado não esta vinculado a nenhum usuário cadastrado no sistema", HttpStatus.NOT_FOUND);
-    }
-
-    let password = userID.senha;
-    if (updateUsuarioDto.senha) {
-      password = await hash(updateUsuarioDto.senha!, 10);
-    }
-
-    const userUpdate = await this.prisma.usuario.update({
-      where: { id },
-      data: {
-        nome: updateUsuarioDto.nome ?? userID.nome,
-        cargo: updateUsuarioDto.cargo ?? userID.cargo,
-        senha: password
+      if (!userID) {
+        throw new HttpException("O ID informado não esta vinculado a nenhum usuário cadastrado no sistema", HttpStatus.NOT_FOUND);
       }
-    })
 
-    return {
-      antes: userID,
-      depois: userUpdate
+      let password = userID.senha;
+      if (updateUsuarioDto.senha) {
+        password = await hash(updateUsuarioDto.senha!, 10);
+      }
+
+      const userUpdate = await this.prisma.usuario.update({
+        where: { id },
+        data: {
+          nome: updateUsuarioDto.nome ?? userID.nome,
+          cargo: updateUsuarioDto.cargo ?? userID.cargo,
+          senha: password
+        }
+      })
+
+      return {
+        antes: userID,
+        depois: userUpdate
+      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        "erro interno ao salvar o usuário no sistema.",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      )
     }
   }
 
   public async remove(id: string) {
-    const userID = await this.findOne(id);
+    try {
+      const userID = await this.findOne(id);
 
-    if (!userID) {
-      throw new HttpException("O ID informado não esta vinculado a nenhum usuário cadastrado no sistema", HttpStatus.NOT_FOUND);
+      if (!userID) {
+        throw new HttpException("O ID informado não esta vinculado a nenhum usuário cadastrado no sistema", HttpStatus.NOT_FOUND);
+      }
+
+      await this.prisma.usuario.delete({
+        where: { id }
+      })
+
+      return `Os dados do usuário ${userID.nome.toUpperCase()} foram excluídos com sucesso.`
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        "erro interno ao salvar o usuário no sistema.",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      )
     }
-
-    await this.prisma.usuario.delete({
-      where: { id }
-    })
-
-    return `Os dados do usuário ${userID.nome.toUpperCase()} foram excluídos com sucesso.`
   }
 }
