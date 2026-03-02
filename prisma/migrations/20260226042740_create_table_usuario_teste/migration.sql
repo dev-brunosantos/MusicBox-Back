@@ -4,7 +4,9 @@ CREATE TABLE "Usuario" (
     "nome" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "senha" TEXT NOT NULL,
-    "cargo" TEXT NOT NULL DEFAULT 'Aluno'
+    "cargo" TEXT NOT NULL DEFAULT 'Aluno',
+    "dataCadastro" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "dataAtualizacao" DATETIME NOT NULL
 );
 
 -- CreateIndex
